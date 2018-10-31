@@ -4,7 +4,9 @@
     "lint": "eslint src webpack",
     "prettier": "prettier --write \"{src,webpack}/**/*.?(js|json)\"",
     "build": "rm -rf dist && NODE_ENV=production webpack --progress --hide-modules --config webpack/build.babel.js",
-    "prod": "NODE_ENV=production yarn start"
+    "prod": "NODE_ENV=production PORT=4573 yarn start",
+    "setup": "pm2 deploy ecosystem.json5 production setup",
+    "deploy": "pm2 deploy ecosystem.json5 production"
   },
   "dependencies": {
     "compression": "^1.7.3",
