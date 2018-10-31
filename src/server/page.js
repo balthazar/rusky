@@ -11,6 +11,17 @@ export default ({ state, html, main }) => `<!doctype html>
     <script>
       window.__INITIAL_STATE__ = ${serialize(state)}
     </script>
+    <style>
+      *, *:after, *:before {
+        box-sizing: border-box;
+        font: inherit;
+        color: inherit;
+        margin: 0;
+        padding: 0;
+        border: none;
+        outline: none;
+      }
+    </style>
   </head>
   <body>
     <div id="root">${html}</div>

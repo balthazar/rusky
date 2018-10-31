@@ -1,6 +1,8 @@
+import q from 'q'
+import fs from 'fs'
+import path from 'path'
 import express from 'express'
 import compression from 'compression'
-import path from 'path'
 
 import render from './render'
 import * as globals from '../globals'
@@ -23,6 +25,19 @@ if (__PROD__) {
   server.use(compression())
   server.use('/dist', express.static(DIST_FOLDER))
 }
+
+server.get('/known/:id', async (req, res) => {
+  const out = require('../knownWords')
+  out[req.params.id] = !out[req.params.id]
+
+  await q.nfcall(
+    fs.writeFile,
+    path.join(__dirname, '../knownWords.js'),
+    `module.exports = ${JSON.stringify(out, null, 2)}`,
+  )
+
+  res.status(200).end()
+})
 
 server.use('/assets', express.static(ASSETS_FOLDER))
 server.use(render(stats))
