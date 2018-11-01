@@ -4,7 +4,6 @@ import { MdVolumeUp, MdLink } from 'react-icons/md'
 import { AutoSizer, List } from 'react-virtualized'
 
 import words from '../finalWords'
-import knownWords from '../knownWords'
 
 const containerStyle = {
   padding: '1rem',
@@ -75,11 +74,13 @@ const knownLabels = {
 
 const playSound = url => new Audio(url).play()
 
+const getKnown = () => require('../knownWords')
+
 const filterStuff = (list, searchText, known) =>
   searchText
     ? list.filter(w => w.traduction.includes(searchText) || w.russian.includes(searchText))
     : known !== null
-      ? list.filter(w => known === (knownWords[w.id] || false))
+      ? list.filter(w => known === (getKnown()[w.id] || false))
       : list
 
 const makeWords = ({ known = null, searchText } = {}) => {
@@ -117,7 +118,6 @@ class Home extends Component {
   toggleKnown = async id => {
     const { known, searchText } = this.state
 
-    knownWords[id] = !knownWords[id]
     await fetch(`/known/${id}`)
     this.setState({
       words: makeWords({ known, searchText }),
@@ -162,7 +162,7 @@ class Home extends Component {
         </a>
 
         <span
-          style={{ ...checkMark, borderTopColor: knownWords[id] ? '#21c645' : 'orange' }}
+          style={{ ...checkMark, borderTopColor: getKnown()[id] ? '#21c645' : 'orange' }}
           onClick={() => this.toggleKnown(id)}
         />
 
