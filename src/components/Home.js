@@ -4,7 +4,6 @@ import { MdVolumeUp, MdLink } from 'react-icons/md'
 import { AutoSizer, List } from 'react-virtualized'
 
 import words from '../finalWords'
-import knownWords from '../knownWords'
 
 const containerStyle = {
   padding: '1rem',
@@ -75,14 +74,14 @@ const knownLabels = {
 
 const playSound = url => new Audio(url).play()
 
-const filterStuff = (list, searchText, known) =>
+const filterStuff = ({ list, searchText, known, knowns }) =>
   searchText
     ? list.filter(w => w.traduction.includes(searchText) || w.russian.includes(searchText))
     : known !== null
-      ? list.filter(w => known === (knownWords[w.id] || false))
+      ? list.filter(w => known === (knowns[w.id] || false))
       : list
 
-const makeWords = ({ known = null, searchText } = {}) => {
+const makeWords = ({ known = null, knowns = {}, searchText } = {}) => {
   const { word, noun, verb } = words.reduce(
     (acc, word) => {
       acc[word.type].push(word)
@@ -92,35 +91,54 @@ const makeWords = ({ known = null, searchText } = {}) => {
   )
 
   return {
-    word: orderBy(filterStuff(word, searchText, known), ['rank']),
-    noun: orderBy(filterStuff(noun, searchText, known), ['rank']),
-    verb: orderBy(filterStuff(verb, searchText, known), ['rank']),
+    word: orderBy(filterStuff({ list: word, searchText, known, knowns }), ['rank']),
+    noun: orderBy(filterStuff({ list: noun, searchText, known, knowns }), ['rank']),
+    verb: orderBy(filterStuff({ list: verb, searchText, known, knowns }), ['rank']),
   }
 }
 
 class Home extends Component {
   state = {
     known: null,
+    knowns: {},
     searchText: '',
-    words: makeWords(),
+    words: null,
+  }
+
+  componentDidMount() {
+    this.loadKnowns()
+  }
+
+  loadKnowns = async () => {
+    const { searchText, known } = this.state
+
+    const res = await fetch('/known')
+    const knowns = await res.json()
+    this.setState({
+      knowns,
+      words: makeWords({ known, knowns, searchText }),
+    })
   }
 
   changeKnown = known => {
-    const { searchText } = this.state
+    const { searchText, knowns } = this.state
 
     this.setState({
       known,
-      words: makeWords({ known, searchText }),
+      words: makeWords({ known, knowns, searchText }),
     })
   }
 
   toggleKnown = async id => {
-    const { known, searchText } = this.state
+    const { known, knowns, searchText } = this.state
 
-    knownWords[id] = !knownWords[id]
     await fetch(`/known/${id}`)
     this.setState({
-      words: makeWords({ known, searchText }),
+      words: makeWords({ known, knowns, searchText }),
+      knowns: {
+        ...knowns,
+        [id]: !knowns[id],
+      },
     })
   }
 
@@ -131,6 +149,7 @@ class Home extends Component {
   }
 
   rowRenderer = type => ({ key, index, style }) => {
+    const { knowns } = this.state
     const {
       id,
       russian,
@@ -162,7 +181,7 @@ class Home extends Component {
         </a>
 
         <span
-          style={{ ...checkMark, borderTopColor: knownWords[id] ? '#21c645' : 'orange' }}
+          style={{ ...checkMark, borderTopColor: knowns[id] ? '#21c645' : 'orange' }}
           onClick={() => this.toggleKnown(id)}
         />
 
@@ -217,50 +236,52 @@ class Home extends Component {
           />
         </div>
 
-        <div style={{ flex: 1, marginTop: '2rem' }}>
-          <AutoSizer>
-            {({ height }) => (
-              <div
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  width: '100vw',
-                  flex: 1,
-                }}
-              >
-                <div style={wordsStyle}>
-                  <List
-                    width={350}
-                    height={height}
-                    rowCount={words.word.length}
-                    rowHeight={60}
-                    rowRenderer={this.rowRenderer('word')}
-                  />
-                </div>
+        {words && (
+          <div style={{ flex: 1, marginTop: '2rem' }}>
+            <AutoSizer>
+              {({ height }) => (
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    width: '100vw',
+                    flex: 1,
+                  }}
+                >
+                  <div style={wordsStyle}>
+                    <List
+                      width={350}
+                      height={height}
+                      rowCount={words.word.length}
+                      rowHeight={60}
+                      rowRenderer={this.rowRenderer('word')}
+                    />
+                  </div>
 
-                <div style={wordsStyle}>
-                  <List
-                    width={350}
-                    height={height}
-                    rowCount={words.noun.length}
-                    rowHeight={60}
-                    rowRenderer={this.rowRenderer('noun')}
-                  />
-                </div>
+                  <div style={wordsStyle}>
+                    <List
+                      width={350}
+                      height={height}
+                      rowCount={words.noun.length}
+                      rowHeight={60}
+                      rowRenderer={this.rowRenderer('noun')}
+                    />
+                  </div>
 
-                <div style={wordsStyle}>
-                  <List
-                    width={350}
-                    height={height}
-                    rowCount={words.verb.length}
-                    rowHeight={300}
-                    rowRenderer={this.rowRenderer('verb')}
-                  />
+                  <div style={wordsStyle}>
+                    <List
+                      width={350}
+                      height={height}
+                      rowCount={words.verb.length}
+                      rowHeight={300}
+                      rowRenderer={this.rowRenderer('verb')}
+                    />
+                  </div>
                 </div>
-              </div>
-            )}
-          </AutoSizer>
-        </div>
+              )}
+            </AutoSizer>
+          </div>
+        )}
       </div>
     )
   }

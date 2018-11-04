@@ -26,6 +26,11 @@ if (__PROD__) {
   server.use('/dist', express.static(DIST_FOLDER))
 }
 
+server.get('/known', async (req, res) => {
+  const out = await q.nfcall(fs.readFile, path.join(__dirname, '../knownWords.js'))
+  res.send(JSON.parse(out.toString().replace('module.exports = ', '')))
+})
+
 server.get('/known/:id', async (req, res) => {
   const out = require('../knownWords')
   out[req.params.id] = !out[req.params.id]
