@@ -99,7 +99,7 @@ const makeWords = ({ known = null, knowns = {}, searchText } = {}) => {
 
 class Home extends Component {
   state = {
-    known: null,
+    known: false,
     knowns: {},
     searchText: '',
     words: null,
@@ -143,9 +143,9 @@ class Home extends Component {
   }
 
   changeSearch = e => {
-    const { known } = this.state
+    const { known, knowns } = this.state
     const searchText = e.target.value
-    this.setState({ searchText, words: makeWords({ known, searchText }) })
+    this.setState({ searchText, words: makeWords({ known, knowns, searchText }) })
   }
 
   rowRenderer = type => ({ key, index, style }) => {
