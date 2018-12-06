@@ -13,7 +13,6 @@ const containerStyle = {
 }
 
 const filterSelect = {
-  padding: '0.5rem',
   display: 'inline-flex',
 }
 
@@ -103,6 +102,9 @@ class Home extends Component {
     knowns: {},
     searchText: '',
     words: null,
+
+    hideRussian: false,
+    hideEnglish: false,
   }
 
   componentDidMount() {
@@ -149,7 +151,7 @@ class Home extends Component {
   }
 
   rowRenderer = type => ({ key, index, style }) => {
-    const { knowns } = this.state
+    const { knowns, hideRussian, hideEnglish } = this.state
     const {
       id,
       russian,
@@ -162,6 +164,8 @@ class Home extends Component {
       conjugation,
     } = this.state.words[type][index]
 
+    console.log(hideRussian)
+
     return (
       <div style={{ ...wordStyle, ...style }} key={key}>
         <span style={{ position: 'absolute', top: 5, left: 5, fontSize: 12 }}>
@@ -169,8 +173,9 @@ class Home extends Component {
           {' - '}
           {rank}
         </span>
-        <div style={{ fontSize: 20 }}>{russian}</div>
-        <div style={{ textAlign: 'center' }}>{traduction}</div>
+        {!hideRussian && <div style={{ fontSize: 20 }}>{russian}</div>}
+
+        {!hideEnglish && <div style={{ textAlign: 'center' }}>{traduction}</div>}
 
         <a
           href={`https://translate.google.com/?source=osdd#ru/en/${russian}`}
@@ -207,7 +212,7 @@ class Home extends Component {
   }
 
   render() {
-    const { words, known, searchText } = this.state
+    const { words, known, searchText, hideRussian, hideEnglish } = this.state
 
     return (
       <div style={containerStyle}>
@@ -226,6 +231,23 @@ class Home extends Component {
             </span>
           ))}
         </div>
+
+        <div style={{ marginTop: 10, marginBottom: 10 }}>
+          <span>hide russian</span>{' '}
+          <input
+            type="checkbox"
+            onChange={e => this.setState({ hideRussian: e.target.checked })}
+            value={hideRussian}
+            style={{ marginRight: 20 }}
+          />
+          <span>hide english</span>{' '}
+          <input
+            type="checkbox"
+            onChange={e => this.setState({ hideEnglish: e.target.checked })}
+            value={hideEnglish}
+          />
+        </div>
+
         <div>
           <input
             type="text"
